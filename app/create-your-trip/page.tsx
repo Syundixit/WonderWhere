@@ -3,8 +3,22 @@
 import Link from "next/link";
 import React, { useState } from "react";
 
+type Trip = {
+  id?: number;
+  title: string;
+  location: string;
+  budget?: string;
+  duration?: string;
+  type?: string;
+  activityType?: string;
+  transport?: string;
+  image?: string;
+  details: { day: number; activity: string }[];
+  keywords?: string[];
+};
+
 export default function CreateYourTrip() {
-  const [trip, setTrip] = useState({
+  const [trip, setTrip] = useState<Trip>({
     title: "",
     location: "",
     budget: "",
@@ -35,28 +49,31 @@ export default function CreateYourTrip() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (typeof window !== "undefined") {
+      const storedTripsString = localStorage.getItem("userTrips") ?? "[]";
+      const storedTrips: Trip[] = JSON.parse(storedTripsString);
 
-    const storedTrips = JSON.parse(localStorage.getItem("userTrips") || "[]");
-    const newTrip = {
-      ...trip,
-      id: Date.now(),
-      keywords: [trip.location, trip.type, trip.activityType],
-    };
+      const newTrip: Trip = {
+        ...trip,
+        id: Date.now(),
+        keywords: [trip.location, trip.type || "", trip.activityType || ""],
+      };
 
-    localStorage.setItem("userTrips", JSON.stringify([...storedTrips, newTrip]));
-    alert("Trip created! It will now appear on the Home Page.");
+      localStorage.setItem("userTrips", JSON.stringify([...storedTrips, newTrip]));
+      alert("Trip created! It will now appear on the Home Page.");
 
-    setTrip({
-      title: "",
-      location: "",
-      budget: "",
-      duration: "",
-      type: "",
-      activityType: "",
-      transport: "",
-      image: "",
-      details: [{ day: 1, activity: "" }],
-    });
+      setTrip({
+        title: "",
+        location: "",
+        budget: "",
+        duration: "",
+        type: "",
+        activityType: "",
+        transport: "",
+        image: "",
+        details: [{ day: 1, activity: "" }],
+      });
+    }
   };
 
   return (
@@ -82,7 +99,7 @@ export default function CreateYourTrip() {
           <input type="text" name="location" placeholder="Location / City / Country" value={trip.location} onChange={handleChange} className="w-full p-2 border rounded" required />
           <input type="text" name="budget" placeholder="Budget" value={trip.budget} onChange={handleChange} className="w-full p-2 border rounded" />
           <input type="text" name="duration" placeholder="Duration" value={trip.duration} onChange={handleChange} className="w-full p-2 border rounded" />
-          
+
           <select name="type" value={trip.type} onChange={handleChange} className="w-full p-2 border rounded">
             <option value="">Trip Type</option>
             <option value="Solo">Solo</option>
@@ -109,16 +126,20 @@ export default function CreateYourTrip() {
             {trip.details.map((d, idx) => (
               <div key={idx} className="flex items-center space-x-2">
                 <span>Day {d.day}:</span>
-                <input type="text" value={d.activity} onChange={(e) => handleDetailChange(idx, e.target.value)} className="flex-1 p-2 border rounded" required />
+                <input
+                  type="text"
+                  value={d.activity}
+                  onChange={(e) => handleDetailChange(idx, e.target.value)}
+                  className="flex-1 p-2 border rounded"
+                />
               </div>
             ))}
-            <button type="button" onClick={addDay} className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition">Add Day</button>
+            <button type="button" onClick={addDay} className="px-4 py-2 bg-blue-600 text-white rounded">Add Day</button>
           </div>
 
-          <button type="submit" className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">Create Trip</button>
+          <button type="submit" className="w-full py-2 bg-green-600 text-white rounded">Create Trip</button>
         </form>
       </main>
     </div>
   );
 }
-
